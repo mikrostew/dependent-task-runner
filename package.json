@@ -2,8 +2,18 @@
   "name": "dependent-task-runner",
   "version": "0.0.0",
   "description": "Runs tasks with dependencies",
+  "scripts": {
+    "test": "mocha test/",
+    "test:watch": "mocha --watch test/",
+    "lint": "eslint ."
+  },
   "main": "index.js",
   "repository": "git@github.com:mikrostew/dependent-task-runner.git",
   "author": "Michael Stewart <mikrostew@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "eslint-config-recommended": "^2.0.0",
+    "mocha": "^5.0.5"
+  }
 }
