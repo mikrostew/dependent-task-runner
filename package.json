@@ -1,7 +1,7 @@
 {
   "name": "dependent-task-runner",
-  "version": "0.0.0",
-  "description": "Runs tasks with dependencies",
+  "version": "0.1.0",
+  "description": "Run async tasks with dependencies",
   "scripts": {
     "test": "mocha test/",
     "test:watch": "mocha --watch test/",
