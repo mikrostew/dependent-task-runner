@@ -1,27 +1,44 @@
 'use strict'
 
 function runTasks (tasks) {
-  // TODO if task fails, should let others run to completion then reject
+  let error
   return Promise.all(
-    tasks.map(task => new Promise((resolve, reject) => {
-      if (typeof task.run === 'function') {
-        resolve(task.run(task.resultsFromDependents))
-      }
-      reject(new Error(`task '${task.id}' has not been defined`))
-    }).then(taskResult => {
-      const readyToRun = []
-      task.children.forEach(child => {
-        // dependent tasks get the results from this task
-        child.resultsFromDependents[task.id] = taskResult
-        child.deps -= 1
-        // once all dependent tasks have finished, the next task can be run
-        if (child.deps === 0) {
-          readyToRun.push(child)
+    tasks.map(task => runTask(task)
+      .then(taskResult => {
+        const readyToRun = []
+        task.children.forEach(child => {
+          // dependent tasks get the results from this task
+          child.resultsFromDependents[task.id] = taskResult
+          child.deps -= 1
+          // once all dependent tasks have finished, the next task can be run
+          if (child.deps === 0) {
+            readyToRun.push(child)
+          }
+        })
+        return runTasks(readyToRun)
+      })
+      .catch(err => {
+        // if there were multiple task erros, only return the first one
+        if (!error) {
+          error = err
         }
       })
-      return runTasks(readyToRun)
-    }))
-  )
+    )
+  ).then(() => {
+    // if there was an error, let tasks run to completion before rejecting
+    if (error) {
+      return Promise.reject(error)
+    }
+  })
+}
+
+function runTask (task) {
+  return new Promise((resolve, reject) => {
+    if (typeof task.run === 'function') {
+      resolve(task.run(task.resultsFromDependents))
+    }
+    reject(new Error(`task '${task.id}' has not been defined`))
+  })
 }
 
 function createTask (taskId, taskFunction) {

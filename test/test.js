@@ -7,11 +7,14 @@ const expect = require('chai').expect
 
 const DependentTaskRunner = require('../')
 
-function logTasksAndResults (taskLog, resultLog, id, taskTimeMs) {
+function logTasksAndResults (taskLog, resultLog, id, taskTimeMs, err) {
   return function (results) {
     taskLog.push(`start ${id}`)
     resultLog[id] = results
     return new Promise(resolve => {
+      if (err) {
+        throw new Error(err)
+      }
       setTimeout(
         () => {
           taskLog.push(`end ${id}`)
@@ -282,5 +285,99 @@ describe('errors', () => {
       )
 
     expect(testFunc).to.throw('circular dependency detected')
+  })
+})
+
+describe('task errors', () => {
+  it('running tasks run to completion', () => {
+    const taskRunner = new DependentTaskRunner()
+    const taskLog = []
+    const taskResults = {}
+
+    taskRunner
+      .addTask(
+        { id: 'A', depends: [ 'B', 'C', 'D' ] },
+        logTasksAndResults(taskLog, taskResults, 'A', 10)
+      )
+      .addTask(
+        { id: 'B' },
+        logTasksAndResults(taskLog, taskResults, 'B', 10, 'some error')
+      )
+      .addTask(
+        { id: 'C' },
+        logTasksAndResults(taskLog, taskResults, 'C', 30)
+      )
+      .addTask(
+        { id: 'D' },
+        logTasksAndResults(taskLog, taskResults, 'D', 20)
+      )
+
+    return taskRunner.run()
+      .catch(e => {
+        expect(e).to.match(/some error/)
+      })
+      .then(() => {
+        assert.deepEqual(taskLog, [
+          'start B',
+          'start C',
+          'start D',
+          'end D',
+          'end C',
+        ])
+        assert.deepEqual(taskResults, {
+          B: { },
+          C: { },
+          D: { },
+        })
+      })
+  })
+
+  it('for multiple errors only the first error is returned', () => {
+    const taskRunner = new DependentTaskRunner()
+    const taskLog = []
+    const taskResults = {}
+
+    taskRunner
+      .addTask(
+        { id: 'A', depends: [ 'B', 'C', 'E' ] },
+        logTasksAndResults(taskLog, taskResults, 'A', 10)
+      )
+      .addTask(
+        { id: 'B' },
+        logTasksAndResults(taskLog, taskResults, 'B', 10, 'some error')
+      )
+      .addTask(
+        { id: 'C' },
+        logTasksAndResults(taskLog, taskResults, 'C', 30)
+      )
+      .addTask(
+        { id: 'E', depends: 'D' },
+        logTasksAndResults(taskLog, taskResults, 'E', 10, 'another error')
+      )
+      .addTask(
+        { id: 'D' },
+        logTasksAndResults(taskLog, taskResults, 'D', 10)
+      )
+
+    return taskRunner.run()
+      .catch(e => {
+        expect(e).to.match(/some error/)
+      })
+      .then(() => {
+        assert.deepEqual(taskLog, [
+          'start B',
+          'start C',
+          'start D',
+          'end D',
+          'start E',
+          'end C',
+        ])
+        assert.deepEqual(taskResults, {
+          B: { },
+          C: { },
+          D: { },
+          E: { D: 'D-result' },
+        })
+      })
   })
 })
