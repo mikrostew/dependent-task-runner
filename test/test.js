@@ -47,7 +47,7 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'B', 10)
       )
 
-    return taskRunner.run().then(() => {
+    return taskRunner.run().then(result => {
       assert.deepEqual(taskLog, [
         'start B',
         'end B',
@@ -57,6 +57,10 @@ describe('task order and results', () => {
       assert.deepEqual(taskResults, {
         A: { B: 'B-result' },
         B: { },
+      })
+      assert.deepEqual(result, {
+        A: 'A-result',
+        B: 'B-result',
       })
     })
   })
@@ -84,7 +88,7 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'F', 20)
       )
 
-    return taskRunner.run().then(() => {
+    return taskRunner.run().then(result => {
       assert.deepEqual(taskLog, [
         'start B',
         'start C',
@@ -100,6 +104,12 @@ describe('task order and results', () => {
         B: { },
         C: { },
         F: { },
+      })
+      assert.deepEqual(result, {
+        A: 'A-result',
+        B: 'B-result',
+        C: 'C-result',
+        F: 'F-result',
       })
     })
   })
@@ -127,7 +137,7 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'Q', 20)
       )
 
-    return taskRunner.run().then(() => {
+    return taskRunner.run().then(result => {
       assert.deepEqual(taskLog, [
         'start B',
         'start Q',
@@ -143,6 +153,12 @@ describe('task order and results', () => {
         B: { },
         F: { Q: 'Q-result' },
         Q: { },
+      })
+      assert.deepEqual(result, {
+        A: 'A-result',
+        B: 'B-result',
+        F: 'F-result',
+        Q: 'Q-result',
       })
     })
   })
@@ -174,7 +190,7 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'F', 10)
       )
 
-    return taskRunner.run().then(() => {
+    return taskRunner.run().then(result => {
       assert.deepEqual(taskLog, [
         'start F',
         'end F',
@@ -193,6 +209,13 @@ describe('task order and results', () => {
         B: { F: 'F-result' },
         C: { F: 'F-result' },
         F: { },
+      })
+      assert.deepEqual(result, {
+        E: 'E-result',
+        A: 'A-result',
+        B: 'B-result',
+        C: 'C-result',
+        F: 'F-result',
       })
     })
   })

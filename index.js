@@ -2,20 +2,15 @@
 
 function runTasks (tasks) {
   let error
+  const results = {}
   return Promise.all(
     tasks.map(task => runTask(task)
       .then(taskResult => {
-        const readyToRun = []
-        task.children.forEach(child => {
-          // dependent tasks get the results from this task
-          child.resultsFromDependents[task.id] = taskResult
-          child.deps -= 1
-          // once all dependent tasks have finished, the next task can be run
-          if (child.deps === 0) {
-            readyToRun.push(child)
-          }
-        })
-        return runTasks(readyToRun)
+        results[task.id] = taskResult
+        const readyToRun = task.children.filter(updateChildTask(task.id, taskResult))
+        if (readyToRun.length > 0) {
+          return runTasks(readyToRun).then(res => Object.assign(results, res))
+        }
       })
       .catch(err => {
         // if there were multiple task erros, only return the first one
@@ -29,6 +24,7 @@ function runTasks (tasks) {
     if (error) {
       return Promise.reject(error)
     }
+    return results
   })
 }
 
@@ -39,6 +35,16 @@ function runTask (task) {
     }
     reject(new Error(`task '${task.id}' has not been defined`))
   })
+}
+
+function updateChildTask (id, result) {
+  return function updateAndRun (child) {
+    // dependent tasks get the results from the parent task
+    child.resultsFromDependents[id] = result
+    child.deps -= 1
+    // if all dependent tasks have finished, this can be run
+    return child.deps === 0
+  }
 }
 
 function createTask (taskId, taskFunction) {
@@ -108,7 +114,6 @@ class DependentTaskRunner {
     // tasks with no dependencies can be run first
     const toRun = allTasks.filter(task => task.deps === 0)
     return runTasks(toRun)
-    // TODO return results from the last task, or from all tasks?
   }
 
 }
