@@ -110,10 +110,11 @@ class DependentTaskRunner {
   }
 
   run () {
-    const allTasks = Object.keys(this.tasks).map(taskId => this.tasks[taskId])
     // tasks with no dependencies can be run first
-    const toRun = allTasks.filter(task => task.deps === 0)
-    return runTasks(toRun)
+    const canRun = Object.keys(this.tasks)
+      .map(taskId => this.tasks[taskId])
+      .filter(task => task.deps === 0)
+    return runTasks(canRun)
   }
 
 }
