@@ -277,7 +277,7 @@ describe('errors', () => {
         { id: 'B', depends: 'A' }, // this creates the circular dep
         () => 'empty'
       )
-    expect(testFunc).to.throw('circular dependency detected')
+    expect(testFunc).to.throw('circular dependency detected: A --> B --> A')
   })
 
   it('larger circular dependency, added out of order', () => {
@@ -303,7 +303,7 @@ describe('errors', () => {
         logTasksAndResults(taskLog, taskResults, 'D', 10)
       )
 
-    expect(testFunc).to.throw('circular dependency detected')
+    expect(testFunc).to.throw('circular dependency detected: A --> D --> C --> B --> A')
   })
 })
 

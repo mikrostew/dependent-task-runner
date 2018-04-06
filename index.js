@@ -49,6 +49,17 @@ function propagateDownstreamInfo (task) {
   })
 }
 
+function getPath (task, targetId) {
+  if (task.id === targetId) {
+    return [ targetId ]
+  }
+  const childs = task.children.filter(child => child.allDownstream[targetId] !== undefined)
+  if (childs.length > 0) {
+    return [ task.id ].concat(getPath(childs[0], targetId))
+  }
+  return []
+}
+
 function createTask (taskId, taskFunction) {
   return {
     id: taskId,
@@ -103,8 +114,8 @@ class DependentTaskRunner {
       depTask.allDownstream[newTask.id] = true
       Object.assign(depTask.allDownstream, newTask.allDownstream)
       if (depTask.allDownstream[dep]) {
-        // TODO it would be nice to show the cycle in error msg
-        throw new Error('circular dependency detected')
+        const cycle = [ depTask.id ].concat(getPath(newTask, depTask.id)).join(' --> ')
+        throw new Error('circular dependency detected: ' + cycle)
       }
       propagateDownstreamInfo(depTask)
     })

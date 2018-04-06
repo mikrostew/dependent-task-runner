@@ -16,5 +16,7 @@ module.exports = {
     "import/no-commonjs": 0,
     // use 'self' for capturing 'this' execution context
     "consistent-this": ["error", "self"],
+    // console is only a warning
+    "no-console": ["warn"],
   },
 }

@@ -1,6 +1,6 @@
 {
   "name": "dependent-task-runner",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Run async tasks with dependencies",
   "scripts": {
     "test": "eslint . && mocha test/",
