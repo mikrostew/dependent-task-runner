@@ -14,18 +14,13 @@ function runTasks (tasks) {
       })
       .catch(err => {
         // if there were multiple task erros, only return the first one
+        // let tasks run to completion before rejecting
         if (!error) {
           error = err
         }
       })
     )
-  ).then(() => {
-    // if there was an error, let tasks run to completion before rejecting
-    if (error) {
-      return Promise.reject(error)
-    }
-    return results
-  })
+  ).then(() => error ? Promise.reject(error) : results)
 }
 
 function runTask (task) {
@@ -47,11 +42,19 @@ function updateChildTask (id, result) {
   }
 }
 
+function propagateDownstreamInfo (task) {
+  Object.keys(task.parents).forEach(parentId => {
+    Object.assign(task.parents[parentId].allDownstream, task.allDownstream)
+    propagateDownstreamInfo(task.parents[parentId])
+  })
+}
+
 function createTask (taskId, taskFunction) {
   return {
     id: taskId,
-    children: [], // things that depend on this task
-    deps: 0, // things this depends on (that haven't run yet)
+    children: [], // tasks that depend on this task
+    parents: {}, // tasks that this depends on
+    deps: 0, // count of things this depends on (that haven't run yet)
     run: taskFunction,
     resultsFromDependents: {}, // results from tasks this depends on
     allDownstream: {}, // all task IDs downstream of this task
@@ -87,7 +90,6 @@ class DependentTaskRunner {
     this.tasks[taskId] = newTask
 
     dependencies.filter(Boolean).forEach(dep => {
-      // dep --> task
       let depTask = this.tasks[dep]
       if (!depTask) {
         // create a placeholder task until it is added
@@ -95,17 +97,19 @@ class DependentTaskRunner {
       }
       depTask.children.push(newTask)
       newTask.deps += 1
+      newTask.parents[dep] = depTask
 
+      // track downstream dependencies to detect cycles
       depTask.allDownstream[newTask.id] = true
       Object.assign(depTask.allDownstream, newTask.allDownstream)
-
       if (depTask.allDownstream[dep]) {
         // TODO it would be nice to show the cycle in error msg
         throw new Error('circular dependency detected')
       }
+      propagateDownstreamInfo(depTask)
     })
 
-    // to allow chained calls
+    // allow chained calls
     return this
   }
 
@@ -116,8 +120,6 @@ class DependentTaskRunner {
       .filter(task => task.deps === 0)
     return runTasks(canRun)
   }
-
 }
 
 module.exports = DependentTaskRunner
-

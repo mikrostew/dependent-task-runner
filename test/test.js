@@ -274,37 +274,33 @@ describe('errors', () => {
         () => 'empty'
       )
       .addTask(
-        { id: 'B', depends: 'A' },
+        { id: 'B', depends: 'A' }, // this creates the circular dep
         () => 'empty'
       )
     expect(testFunc).to.throw('circular dependency detected')
   })
 
-  it('circular dependency in tree', () => {
+  it('larger circular dependency, added out of order', () => {
     const taskRunner = new DependentTaskRunner()
     const taskLog = []
     const taskResults = {}
 
     const testFunc = () => taskRunner
       .addTask(
-        { id: 'E', depends: [ 'A', 'B' ] },
-        logTasksAndResults(taskLog, taskResults, 'E', 10)
-      )
-      .addTask(
-        { id: 'A', depends: [ 'C', 'B', 'F' ] },
+        { id: 'A', depends: 'B' },
         logTasksAndResults(taskLog, taskResults, 'A', 10)
       )
       .addTask(
-        { id: 'B', depends: [ 'F' ] },
+        { id: 'C', depends: 'D' },
+        logTasksAndResults(taskLog, taskResults, 'C', 10)
+      )
+      .addTask(
+        { id: 'B', depends: [ 'C' ] },
         logTasksAndResults(taskLog, taskResults, 'B', 10)
       )
       .addTask(
-        { id: 'C', depends: [ 'F' ] },
-        logTasksAndResults(taskLog, taskResults, 'C', 20)
-      )
-      .addTask(
-        { id: 'F', depends: [ 'E' ] }, // this creates the circular dep
-        logTasksAndResults(taskLog, taskResults, 'F', 10)
+        { id: 'D', depends: 'A' }, // this creates the circular dep
+        logTasksAndResults(taskLog, taskResults, 'D', 10)
       )
 
     expect(testFunc).to.throw('circular dependency detected')
