@@ -9,7 +9,7 @@ const DependentTaskRunner = require('../')
 
 function logTasksAndResults (taskLog, resultLog, id, taskTimeMs, err) {
   return function (results) {
-    taskLog.push(`start ${id}`)
+    taskLog.push(`start ${ id }`)
     resultLog[id] = results
     return new Promise(resolve => {
       if (err) {
@@ -17,8 +17,8 @@ function logTasksAndResults (taskLog, resultLog, id, taskTimeMs, err) {
       }
       setTimeout(
         () => {
-          taskLog.push(`end ${id}`)
-          resolve(`${id}-result`)
+          taskLog.push(`end ${ id }`)
+          resolve(`${ id }-result`)
         },
         taskTimeMs)
     })

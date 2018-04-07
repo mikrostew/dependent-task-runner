@@ -28,7 +28,7 @@ function runTask (task) {
     if (typeof task.run === 'function') {
       resolve(task.run(task.resultsFromDependents))
     }
-    reject(new Error(`task '${task.id}' has not been defined`))
+    reject(new Error(`task '${ task.id }' has not been defined`))
   })
 }
 
@@ -81,7 +81,7 @@ class DependentTaskRunner {
     const taskId = config.id
     const dependencies = Array.isArray(config.depends) ? config.depends : [ config.depends ]
     if (typeof taskFunction !== 'function') {
-      throw new Error(`no function provided for task '${taskId}'`)
+      throw new Error(`no function provided for task '${ taskId }'`)
     }
 
     let newTask
@@ -91,7 +91,7 @@ class DependentTaskRunner {
       newTask = this.tasks[taskId]
       if (newTask.run) {
         // don't add the same task twice
-        throw new Error(`task '${taskId}' has already been added`)
+        throw new Error(`task '${ taskId }' has already been added`)
       }
       newTask.run = taskFunction
     } else {
