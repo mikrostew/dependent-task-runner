@@ -29,7 +29,9 @@ describe('task order and results', () => {
   it('no tasks', () => {
     const taskRunner = new DependentTaskRunner()
 
-    return taskRunner.run()
+    return taskRunner.run().then(result => {
+      assert.deepEqual(result, {})
+    })
   })
 
   it('task with one dependency', () => {
@@ -47,20 +49,32 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'B', 10)
       )
 
+    const expectedOrder = [
+      'start B',
+      'end B',
+      'start A',
+      'end A',
+    ]
+    const expectedInternalResults = {
+      A: { B: 'B-result' },
+      B: { },
+    }
+    const expectedResults = {
+      A: 'A-result',
+      B: 'B-result',
+    }
     return taskRunner.run().then(result => {
-      assert.deepEqual(taskLog, [
-        'start B',
-        'end B',
-        'start A',
-        'end A',
-      ])
-      assert.deepEqual(taskResults, {
-        A: { B: 'B-result' },
-        B: { },
-      })
-      assert.deepEqual(result, {
-        A: 'A-result',
-        B: 'B-result',
+      assert.deepEqual(taskLog, expectedOrder)
+      assert.deepEqual(taskResults, expectedInternalResults)
+      assert.deepEqual(result, expectedResults)
+
+      // run this again, should be the same
+      taskLog.length = 0
+      Object.keys(taskResults).forEach(prop => delete taskResults[prop])
+      return taskRunner.run().then(result => {
+        assert.deepEqual(taskLog, expectedOrder)
+        assert.deepEqual(taskResults, expectedInternalResults)
+        assert.deepEqual(result, expectedResults)
       })
     })
   })
@@ -88,28 +102,40 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'F', 20)
       )
 
+    const expectedOrder = [
+      'start B',
+      'start C',
+      'start F',
+      'end B',
+      'end F',
+      'end C',
+      'start A',
+      'end A',
+    ]
+    const expectedInternalResults = {
+      A: { B: 'B-result', C: 'C-result', F: 'F-result' },
+      B: { },
+      C: { },
+      F: { },
+    }
+    const expectedResults = {
+      A: 'A-result',
+      B: 'B-result',
+      C: 'C-result',
+      F: 'F-result',
+    }
     return taskRunner.run().then(result => {
-      assert.deepEqual(taskLog, [
-        'start B',
-        'start C',
-        'start F',
-        'end B',
-        'end F',
-        'end C',
-        'start A',
-        'end A',
-      ])
-      assert.deepEqual(taskResults, {
-        A: { B: 'B-result', C: 'C-result', F: 'F-result' },
-        B: { },
-        C: { },
-        F: { },
-      })
-      assert.deepEqual(result, {
-        A: 'A-result',
-        B: 'B-result',
-        C: 'C-result',
-        F: 'F-result',
+      assert.deepEqual(taskLog, expectedOrder)
+      assert.deepEqual(taskResults, expectedInternalResults)
+      assert.deepEqual(result, expectedResults)
+
+      // run this again, should be the same
+      taskLog.length = 0
+      Object.keys(taskResults).forEach(prop => delete taskResults[prop])
+      return taskRunner.run().then(result => {
+        assert.deepEqual(taskLog, expectedOrder)
+        assert.deepEqual(taskResults, expectedInternalResults)
+        assert.deepEqual(result, expectedResults)
       })
     })
   })
@@ -137,28 +163,40 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'Q', 20)
       )
 
+    const expectedOrder = [
+      'start B',
+      'start Q',
+      'end B',
+      'start A',
+      'end Q',
+      'start F',
+      'end A',
+      'end F',
+    ]
+    const expectedInternalResults = {
+      A: { B: 'B-result' },
+      B: { },
+      F: { Q: 'Q-result' },
+      Q: { },
+    }
+    const expectedResults = {
+      A: 'A-result',
+      B: 'B-result',
+      F: 'F-result',
+      Q: 'Q-result',
+    }
     return taskRunner.run().then(result => {
-      assert.deepEqual(taskLog, [
-        'start B',
-        'start Q',
-        'end B',
-        'start A',
-        'end Q',
-        'start F',
-        'end A',
-        'end F',
-      ])
-      assert.deepEqual(taskResults, {
-        A: { B: 'B-result' },
-        B: { },
-        F: { Q: 'Q-result' },
-        Q: { },
-      })
-      assert.deepEqual(result, {
-        A: 'A-result',
-        B: 'B-result',
-        F: 'F-result',
-        Q: 'Q-result',
+      assert.deepEqual(taskLog, expectedOrder)
+      assert.deepEqual(taskResults, expectedInternalResults)
+      assert.deepEqual(result, expectedResults)
+
+      // run this again, should be the same
+      taskLog.length = 0
+      Object.keys(taskResults).forEach(prop => delete taskResults[prop])
+      return taskRunner.run().then(result => {
+        assert.deepEqual(taskLog, expectedOrder)
+        assert.deepEqual(taskResults, expectedInternalResults)
+        assert.deepEqual(result, expectedResults)
       })
     })
   })
@@ -190,32 +228,44 @@ describe('task order and results', () => {
         logTasksAndResults(taskLog, taskResults, 'F', 10)
       )
 
+    const expectedOrder = [
+      'start F',
+      'end F',
+      'start B',
+      'start C',
+      'end B',
+      'end C',
+      'start A',
+      'end A',
+      'start E',
+      'end E',
+    ]
+    const expectedInternalResults = {
+      E: { A: 'A-result', B: 'B-result' },
+      A: { C: 'C-result', B: 'B-result', F: 'F-result' },
+      B: { F: 'F-result' },
+      C: { F: 'F-result' },
+      F: { },
+    }
+    const expectedResults = {
+      E: 'E-result',
+      A: 'A-result',
+      B: 'B-result',
+      C: 'C-result',
+      F: 'F-result',
+    }
     return taskRunner.run().then(result => {
-      assert.deepEqual(taskLog, [
-        'start F',
-        'end F',
-        'start B',
-        'start C',
-        'end B',
-        'end C',
-        'start A',
-        'end A',
-        'start E',
-        'end E',
-      ])
-      assert.deepEqual(taskResults, {
-        E: { A: 'A-result', B: 'B-result' },
-        A: { C: 'C-result', B: 'B-result', F: 'F-result' },
-        B: { F: 'F-result' },
-        C: { F: 'F-result' },
-        F: { },
-      })
-      assert.deepEqual(result, {
-        E: 'E-result',
-        A: 'A-result',
-        B: 'B-result',
-        C: 'C-result',
-        F: 'F-result',
+      assert.deepEqual(taskLog, expectedOrder)
+      assert.deepEqual(taskResults, expectedInternalResults)
+      assert.deepEqual(result, expectedResults)
+
+      // run this again, should be the same
+      taskLog.length = 0
+      Object.keys(taskResults).forEach(prop => delete taskResults[prop])
+      return taskRunner.run().then(result => {
+        assert.deepEqual(taskLog, expectedOrder)
+        assert.deepEqual(taskResults, expectedInternalResults)
+        assert.deepEqual(result, expectedResults)
       })
     })
   })

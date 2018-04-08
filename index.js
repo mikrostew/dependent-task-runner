@@ -36,9 +36,8 @@ function updateChildTask (id, result) {
   return function updateAndRun (child) {
     // dependent tasks get the results from the parent task
     child.resultsFromDependents[id] = result
-    child.deps -= 1
-    // if all dependent tasks have finished, this can be run
-    return child.deps === 0
+    // if all dependent tasks have returned results, this can be run
+    return Object.keys(child.resultsFromDependents).length === child.numDeps
   }
 }
 
@@ -65,7 +64,7 @@ function createTask (taskId, taskFunction) {
     id: taskId,
     children: [], // tasks that depend on this task
     parents: {}, // tasks that this depends on
-    deps: 0, // count of things this depends on (that haven't run yet)
+    numDeps: 0, // number of tasks this depends on
     run: taskFunction,
     resultsFromDependents: {}, // results from tasks this depends on
     allDownstream: {}, // all task IDs downstream of this task
@@ -107,7 +106,7 @@ class DependentTaskRunner {
         depTask = this.tasks[dep] = createTask(dep, undefined) // no function for placeholder
       }
       depTask.children.push(newTask)
-      newTask.deps += 1
+      newTask.numDeps += 1
       newTask.parents[dep] = depTask
 
       // track downstream dependencies to detect cycles
@@ -127,8 +126,12 @@ class DependentTaskRunner {
   run () {
     // tasks with no dependencies can be run first
     const canRun = Object.keys(this.tasks)
-      .map(taskId => this.tasks[taskId])
-      .filter(task => task.deps === 0)
+      .map(taskId => {
+        const task = this.tasks[taskId]
+        task.resultsFromDependents = {} // clear results before running tasks
+        return task
+      })
+      .filter(task => task.numDeps === 0)
     return runTasks(canRun)
   }
 }
