@@ -1,4 +1,3 @@
-# Dependent Task Runner
+# ⛔️ [DEPRECATED] Dependent Task Runner
 
-[![Build Status](https://travis-ci.org/mikrostew/dependent-task-runner.svg?branch=master)](https://travis-ci.org/mikrostew/dependent-task-runner)
-
+Deprecated because I haven't used or maintained this in years
